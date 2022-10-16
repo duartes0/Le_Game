@@ -64,14 +64,43 @@ def SpecialQuestion():
  
 def Main():
     #O jogo completo estara aki
-    a = 'oi'
- 
 
-def batata():
-    print(23)
+def pergunta1():
+    cachorro=str(input("o cachorro Coragem era? A=Covarde B=Corajoso C=Ciumento ou D=Irritado"))
+    if cachorro=='A':
+        print("Parabéns, resposta correta.")
+    else:
+        print("Erroou!!")
 
-    
- 
+def pergunta2():
+    carro=str(input("Um carro automático tem quantos pedais? A=4, B=2, C=3 ou D=0"))
+    if carro=='B':
+        print("Parabéns, resposta correta.")
+    else:
+        print("Erroou!!")
+
+def pergunta3():
+    africa=str(input("A África é um? A=País, B=Cidade, C=continente ou D=Um bairro da cidade de Campo Mourão"))
+    if africa=='C':
+        print("Parabéns, resposta correta.")
+    else:
+        print("Erroou!!")
+
+def pergunta4():
+    violao=str(input("Um violão comum tem quantas cordas? A=5, B=7, C=8 ou D=6"))
+    if violao=='D':
+        print("Parabéns, resposta correta.")
+    else:
+        print("Erroou!!")
+
+def pergunta5():
+    exterminador=str(input("A frase marcante do filme 'Exterminador do Futuro' dita pelo proprio Exterminador foi? A=I'll be back, B=I'm back guys, C=What is that? It is a bird? Is it an airplane? No, it's Superman! ou D=God damn"))
+    if exterminador=='A':
+        print("Parabéns, resposta correta.")
+    else:
+        print("Erroou!!")
+
+
 # #List de numeros de questoes no jogo
 # questionNum = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 # #Randomicamente embaralha a lista
