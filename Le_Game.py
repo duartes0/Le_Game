@@ -72,6 +72,7 @@ data = json.load(file)
 #n eh para qual questao deve ser lida
 
 
+
 #4-Funcoes
 #!Escolhe uma resposta correta
 ##Arg: n => O id da questao do .json
