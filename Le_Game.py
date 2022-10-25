@@ -1,30 +1,7 @@
 import json
 from random import *
 from time import *
-import os
 from collections import Counter
-'''
-    Gdd jogo copia do show do milhao
- 
-    Deve ter
-    1- Minimo de 15 perguntas
-    2- Cada pergunta deve ter 4 perguntas, uma sera correta
-    3- A cada pergunta, o jogador deve ter a opçao de escolher
-    uma das opções ou parar
-    4- Dever ter uma forma de pontuação
-    5- Caso escolher parar, a pontuação deverar permanencer a mesma
-    5.1- Caso falhe, a pontuação deve decrescer um pouco
-    5.2- Pode haver mais estrategias de pontuação
-    6- Deverão ter "power ups"
-    6.1- Pulo-pula uma questao, somente usado uma vez
-    6.2- 50|50- remove metade das questoes erradas, somente 2 usos
-    6.3- Plateia- 10 opçoes sorteadas da plateia, cada opçao com 30% de chance
-    de estarcorreta, 2 usos
-    6.4- Universitarios,5 opções sorteadas, cada opçao com 50% de certeza, 2 usos
-    7- Dois manuais
-    7.1- Manual de usuario, como jogar o jogo, suas regras e tal
-    7.2- Manual de api, oque cada funcao, codigo faz
-'''
 '''
     Leitura de comentarios Guia!
     #!Descricao rapida
@@ -52,6 +29,12 @@ totalPlat = 0
 totalPoints = 0
 playerNick = ""
 
+Streaks = {
+    "Posstreak": 0,
+    "Negstreak": 0,
+}
+
+
 #2-Dicionario do player
 #!Highscore que sera salvo em outro arquivo
 #?Essas informacoes sao usadas no arquivo pra saber se o usuario usou algun powerups, salva os pontos e sera usada para o highscore
@@ -70,6 +53,7 @@ file = open('questions.json', encoding="utf8", errors="ignore")
 data = json.load(file)
 #Leitura do json. data["questions"][n]
 #n eh para qual questao deve ser lida
+
 
 
 #4-Funcoes
@@ -99,6 +83,7 @@ def ChooseCorrect(n):
             return letters[num], inco
         num += 1
 
+
 #!Printa 3 pontos em um intervalo de 1 segundo cada
 def printdots():
     sleep(1)
@@ -108,6 +93,7 @@ def printdots():
     sleep(1)
     print('.')
     sleep(1)
+
     
 #!Mostra as questoes no terminal
 #?Essa eh a primeira coisa que aparecera quando um nova pergunta for dada
@@ -131,6 +117,7 @@ def ShowQuestions(answers, rounds, ques):
         sleep(1)
         print('______________________________________________\n______________________________________________')
         num += 1
+##['Sim', 'Nao', 'TOGURO?', 'Nao sei']
 
 #!Mostra 1 certa e outra errada
 #?Usado quando usuario usa o commando 50|50
@@ -168,6 +155,7 @@ def fiftyfifty(answers, correct):
         print(f"\tQ{1}--{letters[num]}---{answers[num]}")
         print(f"\tQ{2}--{letters[index]}---{correct}")
 
+
 #!Calcula a porcentagem
 #? O calculo eh difirente baseado no input do jogador
 ##Arg: arr1 e arr2 => Lista comuns | how => Como o calcula de porcentagem deve ser feito
@@ -200,13 +188,12 @@ def DoPorcentage(arr1, arr2, how):
 
     return listed
         
-
 #!Faz o calculo de plateia e universitarios
 #?Originalmente era apenas para plateia
 ##Arg: answers => Lista de respostas | correct => correta
 ##Arg: num 1 e num2 => numeros que ajudam no calculo
 ##Arg: peps: Quantidade de pessoas | how => se eh universitarios ou plateia
-def PlatCalculation(answers, correct, num1, num2, peps, how):
+def PlatCalculation(answers, correct, peps, how, num1, num2 = 0):
     '''
         1-Acha o index da correta
         2-declara um inteiro que sera usado para o loop
@@ -220,8 +207,8 @@ def PlatCalculation(answers, correct, num1, num2, peps, how):
         5-printa baseado no how
     '''
     index = answers.index(correct)
-    arr1 = []
-    arr2 = []
+    arr1 = []## Respostas certas aki
+    arr2 = []## Respostas erradas aki
     ints = 0
     while(ints < peps):
         ints += 1
@@ -244,9 +231,6 @@ def PlatCalculation(answers, correct, num1, num2, peps, how):
     elif(how == 'uni'):
         print(f"Os universitarios votaram nas seguinte questoes {x}")
             
-        
-
-
 
 
 #!Mostra as perguntas baseadas no powerups utilizado
@@ -256,9 +240,9 @@ def ShowQuestionVar(answers, how,ques):
     if(how == 'cin'):
         fiftyfifty(answers, correct)
     elif(how == 'plat'):
-        PlatCalculation(answers, correct, 0.3, 0.2, 10, how)
+        PlatCalculation(answers, correct,10, how, 0.3, 0.2)
     elif(how == 'uni'):
-        PlatCalculation(answers, correct, 0.5, -5, 5, how)
+        PlatCalculation(answers, correct, 5, how, 0.3, 0.2)
             
 
 
@@ -275,7 +259,20 @@ def detectCase(word):
         return 'plat'
     if(word in cinWords):
         return 'cin'
+
+#!Calcula pontos
+##Arg: rounds => Round atual | sign => Ganhou o perdeu pontos | streak => quantidades de vezes ganha ou perdida seguidas
+def CalcPoints(rounds, sign, streak):
+    if streak == 0:
+        streak = 1
     
+    formula = round(rounds**2 + 100/2)
+    if sign == '+':
+         return round(formula * streak / 1.7)
+    elif sign == '-':
+        return round(-formula * streak / 1.3) 
+    
+
 #!Recebe o input da questao e checka se esta certa
 ##Arg: num => numero da questao | rounds => o round atual
 ###Todo add special case in show question
@@ -338,19 +335,26 @@ def GetAnswer(num, rounds):
                 printdots()
                 print("Resposta certa!")
                 sleep(1)
-                player["Quantidade_de_pontos"] += 100
+                Streaks['Negstreak'] = 0
+                Streaks['Posstreak'] += 1
+                points = CalcPoints(rounds, '+', Streaks['Posstreak'])
+                print(f"Voce ganheou {points}")
+                player["Quantidade_de_pontos"] += points
                 isAnswering = False
             else:
                 printdots()
                 print("Errou!!")
                 sleep(1)
-                player["Quantidade_de_pontos"] -= 100
+                Streaks['Negstreak'] += 1
+                Streaks['Posstreak'] = 0
+                points = CalcPoints(rounds, '-', Streaks['Negstreak'])
+                print(f"Voce perdeu {points}")
+                player["Quantidade_de_pontos"] += points
                 isAnswering = False
         else:
             print("Input invalido")
 
     #print(1)
-
     
 #!Cria uma lista com n intens dentro
 ##Arg: n => tamanho da lista
@@ -369,18 +373,6 @@ def ShuffleArray(arr):
     shuffle(arr)
     return arr
  
-
-#Make a special question case
-#if num is divisible by 5
-def SpecialQuestion():
-    newArr = ShuffleArray()
-    oldArr = []
-    for i in range(0, len(newArr)):
-        if(newArr[i] % 5 == 0 and newArr[i] != 0):
-            oldArr.insert(i, newArr[i])
-    return oldArr
-
-
 #!Salva o score do player em um json
 def SaveResults():
     with open('data.json', 'w') as outfile:
@@ -406,7 +398,7 @@ def Main():
         rounds += 1
         roundPlayed += 1
         num += 1
-        print(player["Quantidade_de_pontos"])
+        print(f"Voce tem: {player['Quantidade_de_pontos']} pontos!")
         if(clause == 'STOP'):
             print("Voce escolheu parar")
             break
@@ -419,18 +411,3 @@ def Main():
    
 
 Main()
-
-
-def printtest():
-    anim = [" O\n/|\\\n |\n/ \\", " O\n/|/\n |\n/ \\"]
-    canvas = ""
-    for i in anim:
-        canvas = i
-        print(f"\r{canvas}")
-
- 
-# #List de numeros de questoes no jogo
-# questionNum = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-# #Randomicamente embaralha a lista
-# shuffle(questionNum)
-# print(questionNum)
